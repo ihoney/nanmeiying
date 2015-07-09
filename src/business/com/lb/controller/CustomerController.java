@@ -2,6 +2,7 @@ package com.lb.controller;
 
 import com.lb.service.CustomerService;
 import com.lb.utils.Constant;
+import com.lb.utils.DateUtil;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.springframework.stereotype.Controller;
@@ -11,6 +12,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,17 +44,23 @@ public class CustomerController {
     @ResponseBody
     public Map<String, Object> checkLogin(HttpServletRequest request, String account, String password) throws JSONException {
         Map<String, Object> jsonObject = new HashMap<String, Object>();
-        String loginIp = request.getRemoteAddr();
         List<Map<String, Object>> customers = customerService.existsCustomer(account, password);
         if (customers != null && customers.size() > 0) {
-            String forbidden = customers.get(0).get("forbidden").toString();
-            if ("是".equals(forbidden)) {
+            Map<String, Object> customer = customers.get(0);
+            String forbidden = customer.get("forbidden").toString();
+            if (forbidden.equals("1")) {
                 jsonObject.put(Constant.REQRESULT, Constant.REQFAILED);
                 jsonObject.put(Constant.TIPMESSAGE, "账号已禁用，请联系管理员!");
             } else {
-                customerService.loginInfo(account, loginIp);
-                jsonObject.put("customer", customers.get(0));
-                jsonObject.put(Constant.REQRESULT, Constant.REQSUCCESS);
+                Date validDate = DateUtil.getDate(customer.get("validTime").toString());
+                Date curDate = new Date();
+                if (curDate.after(validDate)) {
+                    jsonObject.put(Constant.REQRESULT, Constant.REQFAILED);
+                    jsonObject.put(Constant.TIPMESSAGE, "账号已到期，请及时续费!");
+                } else {
+                    jsonObject.put("customer", customers.get(0));
+                    jsonObject.put(Constant.REQRESULT, Constant.REQSUCCESS);
+                }
             }
         } else {
             jsonObject.put(Constant.TIPMESSAGE, "账号或密码错误!");

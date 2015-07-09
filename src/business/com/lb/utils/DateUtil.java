@@ -1,5 +1,6 @@
 package com.lb.utils;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
@@ -37,22 +38,16 @@ public class DateUtil {
         return ymdhmFormat.format(date);
     }
 
-    static {
-        hourMap.put("10", "0___________");
-        hourMap.put("11", "_0__________");
-        hourMap.put("12", "__0_________");
-        hourMap.put("13", "___0________");
-        hourMap.put("14", "____0_______");
-        hourMap.put("15", "_____0______");
-        hourMap.put("16", "______0_____");
-        hourMap.put("17", "_______0____");
-        hourMap.put("18", "________0___");
-        hourMap.put("19", "_________0__");
-        hourMap.put("20", "__________0_");
-        hourMap.put("21", "___________0");
-    }
-
     public static String getPayNum() {
         return payNum.format(new Date());
+    }
+
+    public static Date getDate(String dateStr) {
+        try {
+            return dateFormat.parse(dateStr);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

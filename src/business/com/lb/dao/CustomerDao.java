@@ -1,6 +1,5 @@
 package com.lb.dao;
 
-import com.lb.utils.DateUtil;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -32,9 +31,7 @@ public class CustomerDao {
     }
 
     public List<Map<String, Object>> getCustomerByPage(int pageIndex, int pageSize) {
-        String sql = "SELECT c.* " +
-                " FROM " +
-                " customer AS c limit " + (pageIndex - 1) * pageSize + "," + pageSize;
+        String sql = "SELECT c.*  FROM customer AS c limit " + (pageIndex - 1) * pageSize + "," + pageSize;
         List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
         for (int i = 0; i < list.size(); i++) {
             list.get(i).put("index", (pageIndex - 1) * pageSize + i + 1);
@@ -49,11 +46,6 @@ public class CustomerDao {
 
     public void reUseCustomer(String customerId) {
         String sql = "update customer set forbidden = 0 where id = " + customerId;
-        jdbcTemplate.update(sql);
-    }
-
-    public void loginInfo(String account, String loginIp) {
-        String sql = "update customer set loginip = '" + loginIp + "', logintime = '" + DateUtil.cruTimeStr() + "' where account ='" + account + "'";
         jdbcTemplate.update(sql);
     }
 

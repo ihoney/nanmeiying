@@ -25,10 +25,10 @@ public class MainFilter implements Filter {
         HttpSession session = request.getSession();
         String reqUrl = request.getRequestURI();
         if (!reqUrl.contains("checkLogin.do")) {
-            if (session.getAttribute("admin") != null) {
+            if (session.getAttribute("admin") != null || reqUrl.contains("customer")) {
                 filterChain.doFilter(servletRequest, servletResponse);
             } else {
-                 response.sendRedirect(request.getContextPath() + "/toLogin.jsp");
+                response.sendRedirect(request.getContextPath() + "/toLogin.jsp");
             }
         } else {
             filterChain.doFilter(servletRequest, servletResponse);
