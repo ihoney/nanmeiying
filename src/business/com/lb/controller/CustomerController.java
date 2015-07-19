@@ -84,7 +84,7 @@ public class CustomerController {
                     }
                 }
             } else {
-                jsonObject.put(Constant.TIPMESSAGE, "4");//账户或密码错误
+                jsonObject.put(Constant.TIPMESSAGE, "5");//账户或密码错误
                 jsonObject.put(Constant.REQRESULT, Constant.REQFAILED);
             }
         }
