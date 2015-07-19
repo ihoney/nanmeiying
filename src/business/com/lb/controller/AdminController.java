@@ -46,20 +46,9 @@ public class AdminController {
         List<Map<String, Object>> admins = adminService.existsAdmin(account, password);
         if (admins != null && admins.size() > 0) {
             Map<String, Object> admin = admins.get(0);
-            if (admin.get("loginStatus").toString().equals("1")) {
-                if (!admin.get("sessionId").toString().equals(sessionId)) {
-                    jsonObject.put(Constant.TIPMESSAGE, "当前用户正在登录中，请退出其他登录设备！");
-                    jsonObject.put(Constant.REQRESULT, Constant.REQFAILED);
-                } else {
-                    adminService.changeLoginStatus(admin.get("id").toString(), sessionId);
-                    session.setAttribute("admin", admins.get(0));
-                    jsonObject.put(Constant.REQRESULT, Constant.REQSUCCESS);
-                }
-            } else {
-                adminService.changeLoginStatus(admin.get("id").toString(), sessionId);
-                session.setAttribute("admin", admins.get(0));
-                jsonObject.put(Constant.REQRESULT, Constant.REQSUCCESS);
-            }
+            adminService.changeLoginStatus(admin.get("id").toString(), sessionId);
+            session.setAttribute("admin", admins.get(0));
+            jsonObject.put(Constant.REQRESULT, Constant.REQSUCCESS);
         } else {
             jsonObject.put(Constant.TIPMESSAGE, "用户名或密码错误！");
             jsonObject.put(Constant.REQRESULT, Constant.REQFAILED);

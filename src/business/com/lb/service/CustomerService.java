@@ -64,4 +64,12 @@ public class CustomerService {
     public void renew(String customerId, int renewMonth) {
         customerDao.renew(customerId, renewMonth);
     }
+
+    public void changeLoginInfo(String id, String loginStr, String reqAddr) {
+        customerDao.changeLoginInfo(id, loginStr, reqAddr);
+    }
+
+    public void updateLoginStatus(String customerId, String loginStr) {
+        customerDao.updateLoginStatus(customerId, loginStr);
+    }
 }

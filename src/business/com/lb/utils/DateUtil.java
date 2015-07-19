@@ -50,4 +50,13 @@ public class DateUtil {
         }
         return null;
     }
+
+    public static Date getTime(String dateStr) {
+        try {
+            return timeFormat.parse(dateStr);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 }

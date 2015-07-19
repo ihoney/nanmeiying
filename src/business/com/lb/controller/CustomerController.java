@@ -3,6 +3,7 @@ package com.lb.controller;
 import com.lb.service.CustomerService;
 import com.lb.utils.Constant;
 import com.lb.utils.DateUtil;
+import com.lb.utils.MD5Util;
 import net.sf.json.JSONException;
 import net.sf.json.JSONObject;
 import org.springframework.stereotype.Controller;
@@ -42,30 +43,52 @@ public class CustomerController {
      */
     @RequestMapping(value = "checkLogin")
     @ResponseBody
-    public Map<String, Object> checkLogin(HttpServletRequest request, String account, String password) throws JSONException {
+    public Map<String, Object> checkLogin(HttpServletRequest request, String account, String password, String key, String loginStr, String timeStamp) throws JSONException {
         Map<String, Object> jsonObject = new HashMap<String, Object>();
-        List<Map<String, Object>> customers = customerService.existsCustomer(account, password);
-        if (customers != null && customers.size() > 0) {
-            Map<String, Object> customer = customers.get(0);
-            String forbidden = customer.get("forbidden").toString();
-            if (forbidden.equals("1")) {
-                jsonObject.put(Constant.REQRESULT, Constant.REQFAILED);
-                jsonObject.put(Constant.TIPMESSAGE, "账号已禁用，请联系管理员!");
-            } else {
-                Date validDate = DateUtil.getDate(customer.get("validTime").toString());
-                Date curDate = new Date();
-                if (curDate.after(validDate)) {
-                    jsonObject.put(Constant.REQRESULT, Constant.REQFAILED);
-                    jsonObject.put(Constant.TIPMESSAGE, "账号已到期，请及时续费!");
-                } else {
-                    jsonObject.put("customer", customers.get(0));
-                    jsonObject.put(Constant.REQRESULT, Constant.REQSUCCESS);
-                }
-            }
+        String keyLocal = MD5Util.toHexString(account + password + loginStr + timeStamp);
+        String reqAddr = request.getRemoteAddr();
+
+        if (!keyLocal.equals(key)) {
+            jsonObject.put(Constant.REQRESULT, "0");  //非法登录
         } else {
-            jsonObject.put(Constant.TIPMESSAGE, "账号或密码错误!");
-            jsonObject.put(Constant.REQRESULT, Constant.REQFAILED);
+            List<Map<String, Object>> customers = customerService.existsCustomer(account, password);
+            if (customers != null && customers.size() > 0) {
+                Map<String, Object> customer = customers.get(0);
+                String forbidden = customer.get("forbidden").toString();
+                if (forbidden.equals("1")) {
+                    jsonObject.put(Constant.REQRESULT, "1");//账号禁用
+                } else {
+                    Date validDate = DateUtil.getDate(customer.get("validTime").toString());
+                    Date curDate = new Date();
+                    if (curDate.after(validDate)) {
+                        jsonObject.put(Constant.REQRESULT, "2"); //账户到期
+                    } else {
+                        Date loginTime = DateUtil.getTime(customer.get("loginTime").toString());
+                        long lt = loginTime.getTime();
+                        long cd = curDate.getTime();
+                        if ((lt + 60 * 1000) > cd) {
+                            String loginIp = customer.get("loginIp").toString();
+                            String loginStrCur = customer.get("loginStr").toString();
+                            if (loginIp.equals(reqAddr) && loginStrCur.equals(loginStr)) {
+                                jsonObject.put("customer", customer);
+                                customerService.changeLoginInfo(customer.get("id").toString(), loginStr, reqAddr);
+                                jsonObject.put(Constant.REQRESULT, "3");
+                            } else {
+                                jsonObject.put(Constant.REQRESULT, "4"); //账户已登录
+                            }
+                        } else {
+                            jsonObject.put("customer", customer);
+                            customerService.changeLoginInfo(customer.get("id").toString(), loginStr, reqAddr);
+                            jsonObject.put(Constant.REQRESULT, "3");
+                        }
+                    }
+                }
+            } else {
+                jsonObject.put(Constant.TIPMESSAGE, "4");//账户或密码错误
+                jsonObject.put(Constant.REQRESULT, Constant.REQFAILED);
+            }
         }
+
         return jsonObject;
     }
 
@@ -119,6 +142,26 @@ public class CustomerController {
         JSONObject jsonObject = new JSONObject();
         try {
             customerService.forbiddenCustomer(customerId);
+            jsonObject.put(Constant.REQRESULT, Constant.REQSUCCESS);
+        } catch (Exception e) {
+            jsonObject.put(Constant.REQRESULT, Constant.REQFAILED);
+        }
+        return jsonObject;
+    }
+
+    /**
+     * 没半分钟修改一次登录信息客户
+     *
+     * @param request
+     * @return
+     * @throws net.sf.json.JSONException
+     */
+    @RequestMapping(value = "changLoginStatus")
+    @ResponseBody
+    public JSONObject changLoginStatus(HttpServletRequest request, String customerId, String loginStr) throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            customerService.updateLoginStatus(customerId, loginStr);
             jsonObject.put(Constant.REQRESULT, Constant.REQSUCCESS);
         } catch (Exception e) {
             jsonObject.put(Constant.REQRESULT, Constant.REQFAILED);

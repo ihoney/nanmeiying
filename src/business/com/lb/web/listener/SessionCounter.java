@@ -17,11 +17,13 @@ public class SessionCounter implements HttpSessionListener {
 
     /* Session创建事件 */
     public void sessionCreated(HttpSessionEvent se) {
+        String sessionId = se.getSession().getId();
     }
 
     /* Session失效事件 */
     public void sessionDestroyed(HttpSessionEvent se) {
         String sessionId = se.getSession().getId();
+        System.out.println("des-"+sessionId);
         String sql = "update manager set loginStatus = 0 where sessionId = '" + sessionId + "'";
         jdbcTemplate.update(sql);
     }

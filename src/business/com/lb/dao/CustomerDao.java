@@ -53,4 +53,14 @@ public class CustomerDao {
         String sql = "UPDATE customer SET validTime = DATE_ADD(validTime, INTERVAL " + renewMonth + " MONTH) where id = " + customerId;
         jdbcTemplate.update(sql);
     }
+
+    public void changeLoginInfo(String id, String loginStr, String reqAddr) {
+        String sql = "update customer set loginTime = now(),loginStr=?,loginIp = ? where id= ?";
+        jdbcTemplate.update(sql, new Object[]{loginStr, reqAddr, id});
+    }
+
+    public void updateLoginStatus(String customerId, String loginStr) {
+        String sql = "update customer set loginTime=now() where id = " + customerId;
+        jdbcTemplate.update(sql);
+    }
 }
